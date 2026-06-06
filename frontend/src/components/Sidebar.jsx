@@ -65,7 +65,7 @@ export default function Sidebar() {
           onClick={() => setCurrentView('board')}
         >
           <Icons.KanbanSquare size={18} />
-          <span>Bảng Kanban</span>
+          <span>Bảng công việc</span>
         </button>
       </nav>
 
