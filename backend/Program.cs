@@ -15,7 +15,10 @@ builder.Services.AddCors(options =>
                 "http://localhost:5173",
                 "http://[::1]:5173",
                 // GitHub Pages (production)
-                "https://zeddiewannabexrdev.github.io"
+                "https://zeddiewannabexrdev.github.io",
+                // Somee backend domain (nếu cần)
+                "http://TaskManagement.somee.com",
+                "http://www.TaskManagement.somee.com"
               )
               .AllowAnyHeader()
               .AllowAnyMethod();
