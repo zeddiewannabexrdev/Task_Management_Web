@@ -3,127 +3,15 @@ import useLocalStorage from '../hooks/useLocalStorage';
 
 const TaskContext = createContext();
 
-// Initial categories seed data
-const initialCategories = [
-  { id: 'vr', name: 'Virtual Reality (VR)', color: 'work', icon: 'Glasses' },
-  { id: 'ar', name: 'Augmented Reality (AR)', color: 'personal', icon: 'Smartphone' },
-  { id: 'mr', name: 'Mixed Reality (MR)', color: 'fitness', icon: 'Layers' },
-  { id: 'xr', name: 'Extended Reality (XR)', color: 'shopping', icon: 'Cpu' },
-  { id: 'ai', name: 'Artificial Intelligence (AI)', color: 'other', icon: 'Brain' },
-];
-
-// Initial tasks seed data
-const getInitialTasks = () => {
-  const today = new Date().toISOString().split('T')[0];
-  
-  const yesterdayDate = new Date();
-  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-  const yesterday = yesterdayDate.toISOString().split('T')[0];
-
-  const tomorrowDate = new Date();
-  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-  const tomorrow = tomorrowDate.toISOString().split('T')[0];
-
-  const nextWeekDate = new Date();
-  nextWeekDate.setDate(nextWeekDate.getDate() + 5);
-  const nextWeek = nextWeekDate.toISOString().split('T')[0];
-
-  return [
-    {
-      id: 'task-1',
-      title: 'Tích hợp nhận diện cử chỉ tay (Gesture Tracking) bằng MediaPipe',
-      description: 'Thiết lập luồng xử lý dữ liệu camera trực tiếp, tải mô hình nhận dạng tay của MediaPipe và ánh xạ các cử chỉ tay (pinch, grab, point) thành các sự kiện điều khiển trong không gian ảo.',
-      status: 'inprogress',
-      priority: 'high',
-      category: 'ai',
-      dueDate: today,
-      subtasks: [
-        { id: 'sub-1-1', text: 'Thiết lập luồng đầu vào Camera trực tiếp', completed: true },
-        { id: 'sub-1-2', text: 'Tải mô hình nhận dạng bàn tay MediaPipe', completed: true },
-        { id: 'sub-1-3', text: 'Ánh xạ cử chỉ tay thành sự kiện điều khiển', completed: false }
-      ],
-      createdAt: yesterday
-    },
-    {
-      id: 'task-2',
-      title: 'Tối ưu hóa hiệu năng render (Draw Calls) trên Meta Quest 3',
-      description: 'Phân tích hiệu năng bằng Oculus Profiler, kích hoạt static batching, bake lightmaps trong Unity và giảm thiểu các vật liệu không cần thiết để đạt tốc độ khung hình ổn định 90 FPS.',
-      status: 'done',
-      priority: 'high',
-      category: 'vr',
-      dueDate: yesterday,
-      subtasks: [
-        { id: 'sub-2-1', text: 'Bật tính năng Static Batching & GPU Instancing', completed: true },
-        { id: 'sub-2-2', text: 'Thực hiện nướng bản đồ ánh sáng (Bake Lightmaps)', completed: true },
-        { id: 'sub-2-3', text: 'Kiểm tra tốc độ khung hình bằng Oculus Profiler', completed: true }
-      ],
-      createdAt: yesterday
-    },
-    {
-      id: 'task-3',
-      title: 'Phát triển tính năng định vị không gian (Spatial Anchors)',
-      description: 'Nghiên cứu API ARKit/ARCore Spatial Anchors, viết dịch vụ lưu trữ tọa độ mỏ neo không gian và thực nghiệm định vị đối tượng ảo tại các vị trí vật lý cố định.',
-      status: 'todo',
-      priority: 'medium',
-      category: 'ar',
-      dueDate: tomorrow,
-      subtasks: [
-        { id: 'sub-3-1', text: 'Nghiên cứu tài liệu API Spatial Anchors của ARKit/ARCore', completed: false },
-        { id: 'sub-3-2', text: 'Viết mã dịch vụ lưu trữ tọa độ điểm neo không gian', completed: false },
-        { id: 'sub-3-3', text: 'Kiểm thử định vị đối tượng ảo tại vị trí vật lý cố định', completed: false }
-      ],
-      createdAt: yesterday
-    },
-    {
-      id: 'task-4',
-      title: 'Thiết kế tương tác vật lý với đối tượng ảo (Hand Physics)',
-      description: 'Cấu hình các thuộc tính collider vật lý, tích hợp các cử chỉ tương tác chạm (poke) và cầm nắm (grab) của Meta Interaction SDK, sửa lỗi clipping hình ảnh khi cầm nắm.',
-      status: 'inreview',
-      priority: 'high',
-      category: 'mr',
-      dueDate: today,
-      subtasks: [
-        { id: 'sub-4-1', text: 'Cấu hình các thuộc tính collider vật lý cho đối tượng ảo', completed: true },
-        { id: 'sub-4-2', text: 'Tích hợp cử chỉ chạm và cầm nắm của Interaction SDK', completed: true },
-        { id: 'sub-4-3', text: 'Khắc phục lỗi xuyên vân (clipping) khi tương tác cầm nắm', completed: false }
-      ],
-      createdAt: yesterday
-    },
-    {
-      id: 'task-5',
-      title: 'Tinh chỉnh mô hình LLM làm hướng dẫn viên ảo trong phòng VR',
-      description: 'Thu thập tập dữ liệu hội thoại hướng dẫn du lịch, tiến hành tinh chỉnh mô hình ngôn ngữ lớn (LLM) cục bộ và tích hợp kết nối WebSockets thời gian thực giữa ứng dụng VR và máy chủ AI.',
-      status: 'todo',
-      priority: 'medium',
-      category: 'ai',
-      dueDate: nextWeek,
-      subtasks: [
-        { id: 'sub-6-1', text: 'Thu thập tập dữ liệu hội thoại hướng dẫn viên', completed: false },
-        { id: 'sub-6-2', text: 'Tinh chỉnh mô hình ngôn ngữ lớn (LLM) cục bộ', completed: false },
-        { id: 'sub-6-3', text: 'Tích hợp kết nối WebSockets thời gian thực', completed: false }
-      ],
-      createdAt: today
-    },
-    {
-      id: 'task-6',
-      title: 'Tích hợp OpenXR SDK cho dự án đa nền tảng',
-      description: 'Cài đặt và thiết lập OpenXR Plugin, cấu hình ánh xạ hệ thống nút bấm của các loại tay cầm điều khiển (Quest, Index, Cosmos) và kiểm thử bản build trên Meta Quest và Apple Vision Pro.',
-      status: 'done',
-      priority: 'low',
-      category: 'xr',
-      dueDate: yesterday,
-      subtasks: [
-        { id: 'sub-5-1', text: 'Cài đặt OpenXR Plugin và cấu hình đầu vào', completed: true },
-        { id: 'sub-5-2', text: 'Thiết lập bản build kiểm thử trên Meta Quest và Apple Vision Pro', completed: true }
-      ],
-      createdAt: yesterday
-    }
-  ];
-};
+// Tự động dùng URL từ .env (local) hoặc .env.production (GitHub Pages)
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export function TaskProvider({ children }) {
-  const [tasks, setTasks] = useLocalStorage('tasks_data', getInitialTasks());
-  const [categories, setCategories] = useLocalStorage('tasks_categories', initialCategories);
+  const [tasks, setTasks] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Client-side visual settings (kept in local storage for user preference)
   const [theme, setTheme] = useLocalStorage('app_theme', 'light');
   const [currentView, setCurrentView] = useLocalStorage('current_view', 'dashboard');
   
@@ -146,30 +34,148 @@ export function TaskProvider({ children }) {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
-  // Task CRUD actions
-  const addTask = (taskData) => {
-    const newTask = {
-      ...taskData,
-      id: `task-${Date.now()}`,
-      createdAt: new Date().toISOString().split('T')[0],
-      subtasks: taskData.subtasks || [],
-    };
-    setTasks(prevTasks => [newTask, ...prevTasks]);
-  };
+  // 1. Fetch categories and tasks from C# Backend on mount
+  useEffect(() => {
+    async function initData() {
+      try {
+        setIsLoading(true);
+        
+        // Fetch categories
+        const resCat = await fetch(`${API_BASE_URL}/categories`);
+        if (resCat.ok) {
+          const dataCat = await resCat.json();
+          setCategories(dataCat);
+        }
 
-  const updateTask = (taskId, updatedFields) => {
-    setTasks(prevTasks =>
-      prevTasks.map(task => (task.id === taskId ? { ...task, ...updatedFields } : task))
-    );
-  };
+        // Fetch tasks
+        const resTasks = await fetch(`${API_BASE_URL}/tasks`);
+        if (resTasks.ok) {
+          const dataTasks = await resTasks.json();
+          // Map backend `categoryId` to frontend `category` to avoid rewriting components
+          const mappedTasks = dataTasks.map(t => ({
+            ...t,
+            category: t.categoryId
+          }));
+          setTasks(mappedTasks);
+        }
+      } catch (error) {
+        console.error('Error fetching data from C# API:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    initData();
+  }, []);
 
-  const deleteTask = (taskId) => {
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
-    if (editingTask && editingTask.id === taskId) {
-      closeDrawer();
+  // 2. Add task via POST API
+  const addTask = async (taskData) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: taskData.title,
+          description: taskData.description,
+          status: taskData.status,
+          priority: taskData.priority,
+          categoryId: taskData.category,
+          dueDate: taskData.dueDate,
+          subtasks: taskData.subtasks || []
+        })
+      });
+      
+      if (res.ok) {
+        const createdTask = await res.json();
+        // Map categoryId to category
+        const mappedTask = {
+          ...createdTask,
+          category: createdTask.categoryId
+        };
+        setTasks(prevTasks => [mappedTask, ...prevTasks]);
+      }
+    } catch (error) {
+      console.error('Error adding task to backend:', error);
     }
   };
 
+  // 3. Update task details or status via PUT/PATCH API
+  const updateTask = async (taskId, updatedFields) => {
+    // Check if only status is being updated (fast drag-and-drop path)
+    const keys = Object.keys(updatedFields);
+    if (keys.length === 1 && keys[0] === 'status') {
+      try {
+        const res = await fetch(`${API_BASE_URL}/tasks/${taskId}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: updatedFields.status })
+        });
+        if (res.ok) {
+          setTasks(prevTasks =>
+            prevTasks.map(task => (task.id === taskId ? { ...task, status: updatedFields.status } : task))
+          );
+        }
+      } catch (error) {
+        console.error('Error patching task status:', error);
+      }
+      return;
+    }
+
+    // Full task update path (PUT)
+    const currentTask = tasks.find(t => t.id === taskId);
+    if (!currentTask) return;
+    
+    // Merge existing and new fields
+    const mergedTask = { ...currentTask, ...updatedFields };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: mergedTask.title,
+          description: mergedTask.description,
+          status: mergedTask.status,
+          priority: mergedTask.priority,
+          categoryId: mergedTask.category,
+          dueDate: mergedTask.dueDate,
+          subtasks: mergedTask.subtasks || []
+        })
+      });
+
+      if (res.ok) {
+        const updatedTask = await res.json();
+        const mappedTask = {
+          ...updatedTask,
+          category: updatedTask.categoryId
+        };
+        setTasks(prevTasks =>
+          prevTasks.map(t => (t.id === taskId ? mappedTask : t))
+        );
+      }
+    } catch (error) {
+      console.error('Error updating task in backend:', error);
+    }
+  };
+
+  // 4. Delete task via DELETE API
+  const deleteTask = async (taskId) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
+        method: 'DELETE'
+      });
+      
+      if (res.ok) {
+        setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+        if (editingTask && editingTask.id === taskId) {
+          closeDrawer();
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting task in backend:', error);
+    }
+  };
+
+  // 5. Toggle subtask local state helper (syncs to backend on form save)
   const toggleSubtask = (taskId, subtaskId) => {
     setTasks(prevTasks =>
       prevTasks.map(task => {
@@ -182,10 +188,9 @@ export function TaskProvider({ children }) {
     );
   };
 
-  // Categories CRUD
-  const addCategory = (categoryName) => {
+  // 6. Add category via POST API
+  const addCategory = async (categoryName) => {
     const id = categoryName.toLowerCase().replace(/\s+/g, '-');
-    // Prevent duplicates
     if (categories.some(c => c.id === id)) return;
     
     const colors = ['work', 'personal', 'shopping', 'fitness', 'other'];
@@ -197,7 +202,21 @@ export function TaskProvider({ children }) {
       color: assignedColor,
       icon: 'FolderOpen'
     };
-    setCategories(prev => [...prev, newCategory]);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/categories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newCategory)
+      });
+
+      if (res.ok) {
+        const createdCategory = await res.json();
+        setCategories(prev => [...prev, createdCategory]);
+      }
+    } catch (error) {
+      console.error('Error adding category to backend:', error);
+    }
   };
 
   // Helper actions to control Task Drawer
@@ -271,6 +290,7 @@ export function TaskProvider({ children }) {
         isDrawerOpen,
         editingTask,
         filteredTasks,
+        isLoading,
         
         toggleTheme,
         setCurrentView,
