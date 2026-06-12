@@ -2,7 +2,8 @@
 @inject IJSRuntime JS
 
 @{
-    var cat = AppState.Categories.FirstOrDefault(c => c.Id == Task.CategoryId);
+    var proj = AppState.Projects.FirstOrDefault(p => p.Id == Task.ProjectId);
+    var cat = proj != null ? AppState.Categories.FirstOrDefault(c => c.Id == proj.CategoryId) : null;
     var today = DateTime.Today.ToString("yyyy-MM-dd");
     bool isOverdue = Task.Status != "done" && string.Compare(Task.DueDate, today) < 0;
     int doneCount = Task.Subtasks.Count(s => s.Completed);

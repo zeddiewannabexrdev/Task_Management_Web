@@ -39,6 +39,59 @@ public class TaskService(string connectionString)
         return cat;
     }
 
+    // ─── PROJECTS ────────────────────────────────────────────────────────────
+
+    public async Task<List<ProjectItem>> GetProjectsAsync()
+    {
+        var list = new List<ProjectItem>();
+        using var conn = Conn();
+        using var cmd = SP("sp_GetProjects", conn);
+        await conn.OpenAsync();
+        using var r = await cmd.ExecuteReaderAsync();
+        while (await r.ReadAsync())
+        {
+            list.Add(new ProjectItem
+            {
+                Id = r.GetInt32(0),
+                Name = r.GetString(1),
+                CategoryId = r.GetString(2),
+                CreatedAt = r.GetDateTime(3).ToString("yyyy-MM-dd HH:mm:ss")
+            });
+        }
+        return list;
+    }
+
+    public async Task<ProjectItem> AddProjectAsync(string name, string categoryId)
+    {
+        using var conn = Conn();
+        using var cmd = SP("sp_AddProject", conn);
+        cmd.Parameters.AddWithValue("@Name", name);
+        cmd.Parameters.AddWithValue("@CategoryId", categoryId);
+        
+        var p = new SqlParameter("@ProjectId", SqlDbType.Int) { Direction = ParameterDirection.Output };
+        cmd.Parameters.Add(p);
+        
+        await conn.OpenAsync();
+        await cmd.ExecuteNonQueryAsync();
+        
+        return new ProjectItem 
+        { 
+            Id = (int)p.Value, 
+            Name = name, 
+            CategoryId = categoryId, 
+            CreatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") 
+        };
+    }
+
+    public async Task DeleteProjectAsync(int id)
+    {
+        using var conn = Conn();
+        using var cmd = new SqlCommand("DELETE FROM Projects WHERE Id = @Id", conn);
+        cmd.Parameters.AddWithValue("@Id", id);
+        await conn.OpenAsync();
+        await cmd.ExecuteNonQueryAsync();
+    }
+
     // ─── TASKS ───────────────────────────────────────────────────────────────
 
     public async Task<List<TaskItem>> GetTasksAsync()
@@ -65,7 +118,7 @@ public class TaskService(string connectionString)
             cmd.Parameters.AddWithValue("@Description", (object?)input.Description ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@Status", input.Status);
             cmd.Parameters.AddWithValue("@Priority", input.Priority);
-            cmd.Parameters.AddWithValue("@CategoryId", input.CategoryId);
+            cmd.Parameters.AddWithValue("@ProjectId", input.ProjectId);
             cmd.Parameters.AddWithValue("@DueDate", DateTime.Parse(input.DueDate));
             var p = new SqlParameter("@TaskId", SqlDbType.Int) { Direction = ParameterDirection.Output };
             cmd.Parameters.Add(p);
@@ -89,7 +142,7 @@ public class TaskService(string connectionString)
             cmd.Parameters.AddWithValue("@Description", (object?)input.Description ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@Status", input.Status);
             cmd.Parameters.AddWithValue("@Priority", input.Priority);
-            cmd.Parameters.AddWithValue("@CategoryId", input.CategoryId);
+            cmd.Parameters.AddWithValue("@ProjectId", input.ProjectId);
             cmd.Parameters.AddWithValue("@DueDate", DateTime.Parse(input.DueDate));
             await cmd.ExecuteNonQueryAsync();
         }
@@ -152,7 +205,7 @@ public class TaskService(string connectionString)
             Description = r.IsDBNull(2) ? "" : r.GetString(2),
             Status = r.GetString(3),
             Priority = r.GetString(4),
-            CategoryId = r.GetString(5),
+            ProjectId = r.GetInt32(5),
             DueDate = r.GetDateTime(6).ToString("yyyy-MM-dd"),
             CreatedAt = r.GetDateTime(7).ToString("yyyy-MM-dd HH:mm:ss"),
             Subtasks = subs.Select(s => new Subtask(s.Id, s.Text, s.Completed)).ToList()

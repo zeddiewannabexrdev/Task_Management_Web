@@ -78,19 +78,62 @@
                     </svg>
                     <span>Tất cả</span>
                 </div>
-                <span class="cat-count">@AppState.GetActiveTaskCount("all")</span>
+                <span class="cat-count">@AppState.GetCategoryTaskCount("all")</span>
             </button>
 
             @foreach (var cat in AppState.Categories)
             {
-                <button class="cat-item @(AppState.CategoryFilter == cat.Id ? "active" : "")"
-                        @onclick="() => SelectCategory(cat.Id)">
-                    <div class="cat-item-left">
-                        <span class="cat-dot cat-@cat.Color"></span>
-                        <span>@cat.Name</span>
+                <div class="category-group">
+                    <button class="cat-item @(AppState.CategoryFilter == cat.Id && AppState.SelectedProjectId == null ? "active" : "")"
+                            @onclick="() => SelectCategory(cat.Id)">
+                        <div class="cat-item-left">
+                            <span class="cat-dot cat-@cat.Color"></span>
+                            <span style="font-weight: 600;">@cat.Name</span>
+                        </div>
+                        <span class="cat-count">@AppState.GetCategoryTaskCount(cat.Id)</span>
+                    </button>
+
+                    <div class="project-list" style="padding-left: 15px; margin-top: 4px; margin-bottom: 8px;">
+                        @foreach (var proj in AppState.Projects.Where(p => p.CategoryId == cat.Id))
+                        {
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+                                <button class="cat-item @(AppState.SelectedProjectId == proj.Id ? "active" : "")"
+                                        @onclick="() => SelectProject(proj.Id)" style="min-height: 32px; padding: 4px 10px; flex: 1;">
+                                    <div class="cat-item-left">
+                                        <span style="font-size: 0.9em; opacity: 0.85;">└ @proj.Name</span>
+                                    </div>
+                                    <span class="cat-count" style="font-size: 0.7em;">@AppState.GetActiveTaskCount(proj.Id)</span>
+                                </button>
+                                <button class="icon-btn danger" @onclick="() => RequestDeleteProject(proj.Id)" @onclick:stopPropagation="true" style="margin-left: 4px; opacity: 0.7;" title="Xóa dự án">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
+                                </button>
+                            </div>
+                        }
+
+                        @if (_showAddProjForCat == cat.Id)
+                        {
+                            <div class="cat-add-form" style="margin-left: 10px; margin-top: 4px;">
+                                <input class="cat-add-input" placeholder="Tên dự án..."
+                                       @bind="_newProjName" @bind:event="oninput"
+                                       @onkeydown="(e) => HandleProjKey(e, cat.Id)" autofocus style="font-size: 0.85em; padding: 4px 8px;" />
+                                <button class="icon-btn accent" @onclick="() => SubmitAddProj(cat.Id)">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                </button>
+                                <button class="icon-btn" @onclick="CancelAddProj">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <button class="cat-item" @onclick="() => ToggleAddProj(cat.Id)" style="min-height: 28px; padding: 2px 10px; color: var(--text-muted); background: transparent;">
+                                <div class="cat-item-left">
+                                    <span style="font-size: 0.85em; padding-left: 10px;">+ Thêm dự án</span>
+                                </div>
+                            </button>
+                        }
                     </div>
-                    <span class="cat-count">@AppState.GetActiveTaskCount(cat.Id)</span>
-                </button>
+                </div>
             }
         </div>
     </div>
@@ -131,6 +174,27 @@
             </div>
         </div>
     </div>
+
+    @* Custom Confirm Modal *@
+    @if (_projectToDelete.HasValue)
+    {
+        <div class="drawer-overlay" @onclick="CancelDelete">
+            <div class="drawer-panel" style="max-width: 400px; height: auto; margin: auto; border-radius: 8px;" @onclick:stopPropagation="true">
+                <div class="drawer-header">
+                    <h3>Xác nhận xóa dự án</h3>
+                </div>
+                <div class="drawer-body" style="padding: 20px;">
+                    <p>Bạn có chắc chắn muốn xóa dự án này?</p>
+                    <p class="text-danger" style="margin-top: 10px; font-size: 0.9em;">Toàn bộ công việc bên trong cũng sẽ bị xóa vĩnh viễn và không thể khôi phục.</p>
+                </div>
+                <div class="drawer-footer" style="justify-content: flex-end;">
+                    <button class="btn-secondary" @onclick="CancelDelete">Hủy</button>
+                    <button class="btn-danger" @onclick="ConfirmDeleteProject">Xóa vĩnh viễn</button>
+                </div>
+            </div>
+        </div>
+    }
+
 </aside>
 
 @code {
@@ -143,7 +207,56 @@
     void SelectCategory(string id)
     {
         AppState.SetCategoryFilter(id);
-        AppState.SetView("board"); // Tự động chuyển sang xem Bảng công việc
+        AppState.SetView("board");
+    }
+
+    void SelectProject(int id)
+    {
+        AppState.SelectProject(id);
+        AppState.SetView("board");
+    }
+
+    int? _projectToDelete;
+
+    void RequestDeleteProject(int id)
+    {
+        _projectToDelete = id;
+    }
+
+    void CancelDelete()
+    {
+        _projectToDelete = null;
+    }
+
+    async Task ConfirmDeleteProject()
+    {
+        if (_projectToDelete.HasValue)
+        {
+            var id = _projectToDelete.Value;
+            _projectToDelete = null;
+            await AppState.DeleteProjectAsync(id);
+        }
+    }
+
+    string? _showAddProjForCat;
+    string _newProjName = "";
+
+    void ToggleAddProj(string catId) { _showAddProjForCat = catId; _newProjName = ""; }
+    void CancelAddProj() { _showAddProjForCat = null; _newProjName = ""; }
+
+    async Task SubmitAddProj(string catId)
+    {
+        if (!string.IsNullOrWhiteSpace(_newProjName))
+        {
+            await AppState.AddProjectAsync(_newProjName, catId);
+            CancelAddProj();
+        }
+    }
+
+    async Task HandleProjKey(KeyboardEventArgs e, string catId)
+    {
+        if (e.Key == "Enter") await SubmitAddProj(catId);
+        else if (e.Key == "Escape") CancelAddProj();
     }
 
     async Task ToggleTheme()

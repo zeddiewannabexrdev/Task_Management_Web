@@ -4,6 +4,16 @@ namespace TaskFlow.Models;
 
 public record Category(string Id, string Name, string Color, string Icon);
 
+// ─── Project ──────────────────────────────────────────────────────────────────
+
+public class ProjectItem
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public string CategoryId { get; set; } = "";
+    public string CreatedAt { get; set; } = "";
+}
+
 // ─── Subtask ──────────────────────────────────────────────────────────────────
 
 public record Subtask(int? Id, string Text, bool Completed);
@@ -17,7 +27,7 @@ public class TaskItem
     public string Description { get; set; } = "";
     public string Status { get; set; } = "todo";
     public string Priority { get; set; } = "medium";
-    public string CategoryId { get; set; } = "";
+    public int ProjectId { get; set; }
     public string DueDate { get; set; } = "";
     public string CreatedAt { get; set; } = "";
     public List<Subtask> Subtasks { get; set; } = [];
@@ -31,7 +41,7 @@ public class TaskInput
     public string Description { get; set; } = "";
     public string Status { get; set; } = "todo";
     public string Priority { get; set; } = "medium";
-    public string CategoryId { get; set; } = "";
+    public int ProjectId { get; set; }
     public string DueDate { get; set; } = DateTime.Today.ToString("yyyy-MM-dd");
     public List<Subtask> Subtasks { get; set; } = [];
 
@@ -41,7 +51,7 @@ public class TaskInput
         Description = t.Description,
         Status = t.Status,
         Priority = t.Priority,
-        CategoryId = t.CategoryId,
+        ProjectId = t.ProjectId,
         DueDate = t.DueDate,
         Subtasks = [.. t.Subtasks]
     };

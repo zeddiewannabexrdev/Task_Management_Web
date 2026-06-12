@@ -59,11 +59,11 @@
                 @* Category + Status row *@
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Dự án / Danh mục</label>
-                        <select class="form-select" @bind="_categoryId">
-                            @foreach (var cat in AppState.Categories)
+                        <label class="form-label">Dự án</label>
+                        <select class="form-select" @bind="_projectId">
+                            @foreach (var proj in AppState.Projects)
                             {
-                                <option value="@cat.Id">@cat.Name</option>
+                                <option value="@proj.Id">@proj.Name</option>
                             }
                         </select>
                     </div>
@@ -167,7 +167,7 @@
     string _description = "";
     string _status = "todo";
     string _priority = "medium";
-    string _categoryId = "";
+    int _projectId;
     DateTime _dueDate = DateTime.Today;
     List<Subtask> _subtasks = [];
     string _newSubText = "";
@@ -207,7 +207,7 @@
             _description = "";
             _status = AppState.DefaultStatus;
             _priority = "medium";
-            _categoryId = AppState.Categories.FirstOrDefault()?.Id ?? "";
+            _projectId = AppState.SelectedProjectId ?? AppState.Projects.FirstOrDefault()?.Id ?? 0;
             _dueDate = DateTime.Today;
             _subtasks = [];
         }
@@ -219,7 +219,7 @@
             _description = t.Description;
             _status = t.Status;
             _priority = t.Priority;
-            _categoryId = t.CategoryId;
+            _projectId = t.ProjectId;
             _dueDate = DateTime.TryParse(t.DueDate, out var d) ? d : DateTime.Today;
             _subtasks = [.. t.Subtasks];
         }
@@ -266,7 +266,7 @@
             Description = _description.Trim(),
             Status = _status,
             Priority = _priority,
-            CategoryId = _categoryId,
+            ProjectId = _projectId,
             DueDate = _dueDate.ToString("yyyy-MM-dd"),
             Subtasks = _subtasks
         };

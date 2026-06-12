@@ -2,18 +2,30 @@
 # .gitignore cho Task_Management_Web
 # ===========================
 
+# --- Build & Publish Output ---
+**/bin/
+**/obj/
+**/publish/
+*.zip
+TaskFlow_Deploy_Somee.zip
+taskflow_deploy.zip
+
 # --- Frontend ---
 frontend/node_modules/
 frontend/dist/
 frontend/.env.local
 frontend/.env.*.local
 
-# --- Backend ---
-backend/bin/
-backend/obj/
-backend/publish/
-backend/*.user
-backend/appsettings.secrets.json
+# --- Backend (Blazor) ---
+TaskFlow/bin/
+TaskFlow/obj/
+TaskFlow/publish/
+TaskFlow/*.user
+TaskFlow/appsettings.secrets.json
+
+# --- Console Tools ---
+MigrationApp/bin/
+MigrationApp/obj/
 
 # --- IDE & OS ---
 .vs/

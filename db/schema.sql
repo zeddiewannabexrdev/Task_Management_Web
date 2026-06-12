@@ -21,12 +21,24 @@ GO
 USE TaskFlowDB;
 GO
 
--- 3. Tạo bảng Danh mục / Dự án (Categories)
+-- 3. Tạo bảng Danh mục (Categories)
 CREATE TABLE Categories (
     Id VARCHAR(50) PRIMARY KEY,
     Name NVARCHAR(100) NOT NULL,
     Color VARCHAR(50) NOT NULL,
     Icon VARCHAR(50) NOT NULL
+);
+GO
+
+-- 3.5. Tạo bảng Dự án (Projects)
+CREATE TABLE Projects (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Name NVARCHAR(100) NOT NULL,
+    CategoryId VARCHAR(50) NOT NULL,
+    CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+
+    CONSTRAINT FK_Projects_Categories FOREIGN KEY (CategoryId) REFERENCES Categories(Id) 
+        ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
@@ -37,12 +49,12 @@ CREATE TABLE Tasks (
     Description NVARCHAR(MAX) NULL,
     Status VARCHAR(50) NOT NULL DEFAULT 'todo',
     Priority VARCHAR(50) NOT NULL DEFAULT 'medium',
-    CategoryId VARCHAR(50) NOT NULL,
+    ProjectId INT NOT NULL,
     DueDate DATE NOT NULL,
     CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
     
     -- Các ràng buộc
-    CONSTRAINT FK_Tasks_Categories FOREIGN KEY (CategoryId) REFERENCES Categories(Id) 
+    CONSTRAINT FK_Tasks_Projects FOREIGN KEY (ProjectId) REFERENCES Projects(Id) 
         ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT CK_Tasks_Status CHECK (Status IN ('todo', 'inprogress', 'inreview', 'done')),
     CONSTRAINT CK_Tasks_Priority CHECK (Priority IN ('high', 'medium', 'low'))
@@ -62,8 +74,9 @@ CREATE TABLE Subtasks (
 );
 GO
 
--- 6. Tạo chỉ mục (Indexes) tối ưu hóa truy vấn tìm kiếm & kết nối
-CREATE INDEX IX_Tasks_CategoryId ON Tasks(CategoryId);
+-- 6. Tạo chỉ mục (Indexes)
+CREATE INDEX IX_Projects_CategoryId ON Projects(CategoryId);
+CREATE INDEX IX_Tasks_ProjectId ON Tasks(ProjectId);
 CREATE INDEX IX_Tasks_Status ON Tasks(Status);
 CREATE INDEX IX_Subtasks_TaskId ON Subtasks(TaskId);
 GO

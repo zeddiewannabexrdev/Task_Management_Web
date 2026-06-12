@@ -11,6 +11,7 @@ public class AppState(TaskService db)
     // ─── DATA ─────────────────────────────────────────────────────────────────
     public List<TaskItem> Tasks { get; private set; } = [];
     public List<Category> Categories { get; private set; } = [];
+    public List<ProjectItem> Projects { get; private set; } = [];
     public bool IsLoading { get; private set; }
     public string? ErrorMessage { get; private set; }
 
@@ -23,6 +24,7 @@ public class AppState(TaskService db)
     public string PriorityFilter { get; private set; } = "all";
     public string DateFilter { get; private set; } = "all";
     public string CategoryFilter { get; private set; } = "all";
+    public int? SelectedProjectId { get; private set; }
 
     // ─── DRAWER ───────────────────────────────────────────────────────────────
     public bool IsDrawerOpen { get; private set; }
@@ -43,6 +45,7 @@ public class AppState(TaskService db)
         try
         {
             Categories = await db.GetCategoriesAsync();
+            Projects = await db.GetProjectsAsync();
             Tasks = await db.GetTasksAsync();
             ErrorMessage = null;
         }
@@ -68,8 +71,14 @@ public class AppState(TaskService db)
                 !t.Description.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase))
                 return false;
 
-            if (CategoryFilter != "all" && t.CategoryId != CategoryFilter)
+            if (SelectedProjectId.HasValue && t.ProjectId != SelectedProjectId.Value)
                 return false;
+            else if (!SelectedProjectId.HasValue && CategoryFilter != "all")
+            {
+                // Nếu không chọn Project mà chỉ lọc theo Category (ở Home)
+                var catProjects = Projects.Where(p => p.CategoryId == CategoryFilter).Select(p => p.Id).ToList();
+                if (!catProjects.Contains(t.ProjectId)) return false;
+            }
 
             if (PriorityFilter != "all" && t.Priority != PriorityFilter)
                 return false;
@@ -86,8 +95,15 @@ public class AppState(TaskService db)
         }).ToList();
     }
 
-    public int GetActiveTaskCount(string catId) =>
-        Tasks.Count(t => (catId == "all" || t.CategoryId == catId) && t.Status != "done");
+    public int GetActiveTaskCount(int projectId) =>
+        Tasks.Count(t => t.ProjectId == projectId && t.Status != "done");
+
+    public int GetCategoryTaskCount(string catId)
+    {
+        if (catId == "all") return Tasks.Count(t => t.Status != "done");
+        var pIds = Projects.Where(p => p.CategoryId == catId).Select(p => p.Id).ToList();
+        return Tasks.Count(t => pIds.Contains(t.ProjectId) && t.Status != "done");
+    }
 
     // ─── UI SETTERS ───────────────────────────────────────────────────────────
     public void SetTheme(string t) { Theme = t; Notify(); }
@@ -95,7 +111,8 @@ public class AppState(TaskService db)
     public void SetSearch(string q) { SearchQuery = q; Notify(); }
     public void SetPriorityFilter(string f) { PriorityFilter = f; Notify(); }
     public void SetDateFilter(string f) { DateFilter = f; Notify(); }
-    public void SetCategoryFilter(string f) { CategoryFilter = f; Notify(); }
+    public void SetCategoryFilter(string f) { CategoryFilter = f; SelectedProjectId = null; Notify(); }
+    public void SelectProject(int projectId) { SelectedProjectId = projectId; Notify(); }
     public void ClearFilters() { PriorityFilter = "all"; DateFilter = "all"; Notify(); }
 
     // ─── DRAWER ───────────────────────────────────────────────────────────────
@@ -150,7 +167,7 @@ public class AppState(TaskService db)
                 Description = input.Description ?? "",
                 Status = input.Status,
                 Priority = input.Priority,
-                CategoryId = input.CategoryId,
+                ProjectId = input.ProjectId,
                 DueDate = input.DueDate,
                 CreatedAt = oldTask.CreatedAt,
                 Subtasks = input.Subtasks
@@ -225,5 +242,37 @@ public class AppState(TaskService db)
         await db.AddCategoryAsync(cat);
         Categories.Add(cat);
         Notify();
+    }
+
+    // ─── PROJECT MUTATIONS ────────────────────────────────────────────────────
+    public async Task AddProjectAsync(string name, string categoryId)
+    {
+        var proj = await db.AddProjectAsync(name.Trim(), categoryId);
+        Projects.Add(proj);
+        Notify();
+    }
+
+    public async Task DeleteProjectAsync(int id)
+    {
+        var proj = Projects.FirstOrDefault(p => p.Id == id);
+        if (proj != null) Projects.Remove(proj);
+        
+        // Remove tasks locally (DB does this via cascade)
+        Tasks.RemoveAll(t => t.ProjectId == id);
+        
+        if (SelectedProjectId == id) SelectedProjectId = null;
+        
+        Notify();
+
+        try
+        {
+            await db.DeleteProjectAsync(id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("DELETE PROJECT ERROR: " + ex.ToString());
+            if (proj != null) Projects.Add(proj);
+            Notify();
+        }
     }
 }

@@ -9,7 +9,7 @@
 -- PHẦN 1: TẠO BẢNG
 -- =====================
 
--- Tạo bảng Danh mục / Dự án (Categories)
+-- 3. Tạo bảng Danh mục (Categories)
 IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Categories' AND xtype='U')
 CREATE TABLE Categories (
     Id VARCHAR(50) PRIMARY KEY,
@@ -17,9 +17,20 @@ CREATE TABLE Categories (
     Color VARCHAR(50) NOT NULL,
     Icon VARCHAR(50) NOT NULL
 );
-GO
 
--- Tạo bảng Công việc chính (Tasks)
+-- 3.5. Tạo bảng Dự án (Projects)
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Projects' AND xtype='U')
+CREATE TABLE Projects (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Name NVARCHAR(100) NOT NULL,
+    CategoryId VARCHAR(50) NOT NULL,
+    CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+
+    CONSTRAINT FK_Projects_Categories FOREIGN KEY (CategoryId) REFERENCES Categories(Id) 
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- 4. Tạo bảng Công việc chính (Tasks)
 IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Tasks' AND xtype='U')
 CREATE TABLE Tasks (
     Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -27,31 +38,36 @@ CREATE TABLE Tasks (
     Description NVARCHAR(MAX) NULL,
     Status VARCHAR(50) NOT NULL DEFAULT 'todo',
     Priority VARCHAR(50) NOT NULL DEFAULT 'medium',
-    CategoryId VARCHAR(50) NOT NULL,
+    ProjectId INT NOT NULL,
     DueDate DATE NOT NULL,
     CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
-    CONSTRAINT FK_Tasks_Categories FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
+    
+    -- Các ràng buộc
+    CONSTRAINT FK_Tasks_Projects FOREIGN KEY (ProjectId) REFERENCES Projects(Id) 
         ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT CK_Tasks_Status CHECK (Status IN ('todo', 'inprogress', 'inreview', 'done')),
     CONSTRAINT CK_Tasks_Priority CHECK (Priority IN ('high', 'medium', 'low'))
 );
-GO
 
--- Tạo bảng Công việc con (Subtasks)
+-- 5. Tạo bảng Công việc con (Subtasks)
 IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Subtasks' AND xtype='U')
 CREATE TABLE Subtasks (
     Id INT IDENTITY(1,1) PRIMARY KEY,
     TaskId INT NOT NULL,
     Text NVARCHAR(255) NOT NULL,
     Completed BIT NOT NULL DEFAULT 0,
-    CONSTRAINT FK_Subtasks_Tasks FOREIGN KEY (TaskId) REFERENCES Tasks(Id)
+    
+    -- Các ràng buộc
+    CONSTRAINT FK_Subtasks_Tasks FOREIGN KEY (TaskId) REFERENCES Tasks(Id) 
         ON DELETE CASCADE
 );
-GO
 
--- Tạo Index tối ưu truy vấn
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Tasks_CategoryId')
-    CREATE INDEX IX_Tasks_CategoryId ON Tasks(CategoryId);
+-- 6. Tạo chỉ mục (Indexes)
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Projects_CategoryId')
+    CREATE INDEX IX_Projects_CategoryId ON Projects(CategoryId);
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Tasks_ProjectId')
+    CREATE INDEX IX_Tasks_ProjectId ON Tasks(ProjectId);
 
 IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Tasks_Status')
     CREATE INDEX IX_Tasks_Status ON Tasks(Status);
@@ -81,11 +97,29 @@ BEGIN
 END;
 GO
 
+CREATE OR ALTER PROCEDURE sp_GetProjects
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT Id, Name, CategoryId, CreatedAt FROM Projects ORDER BY CreatedAt DESC;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE sp_AddProject
+    @Name NVARCHAR(100), @CategoryId VARCHAR(50), @ProjectId INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO Projects (Name, CategoryId) VALUES (@Name, @CategoryId);
+    SET @ProjectId = SCOPE_IDENTITY();
+END;
+GO
+
 CREATE OR ALTER PROCEDURE sp_GetTasks
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT t.Id, t.Title, t.Description, t.Status, t.Priority, t.CategoryId, t.DueDate, t.CreatedAt,
+    SELECT t.Id, t.Title, t.Description, t.Status, t.Priority, t.ProjectId, t.DueDate, t.CreatedAt,
         ISNULL((SELECT s.Id, s.Text, s.Completed FROM Subtasks s WHERE s.TaskId = t.Id FOR JSON PATH), '[]') AS SubtasksJson
     FROM Tasks t
     ORDER BY t.CreatedAt DESC;
@@ -97,7 +131,7 @@ CREATE OR ALTER PROCEDURE sp_GetTaskById
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT t.Id, t.Title, t.Description, t.Status, t.Priority, t.CategoryId, t.DueDate, t.CreatedAt,
+    SELECT t.Id, t.Title, t.Description, t.Status, t.Priority, t.ProjectId, t.DueDate, t.CreatedAt,
         ISNULL((SELECT s.Id, s.Text, s.Completed FROM Subtasks s WHERE s.TaskId = t.Id FOR JSON PATH), '[]') AS SubtasksJson
     FROM Tasks t WHERE t.Id = @Id;
 END;
@@ -106,24 +140,24 @@ GO
 CREATE OR ALTER PROCEDURE sp_AddTask
     @Title NVARCHAR(255), @Description NVARCHAR(MAX) = NULL,
     @Status VARCHAR(50) = 'todo', @Priority VARCHAR(50) = 'medium',
-    @CategoryId VARCHAR(50), @DueDate DATE, @TaskId INT OUTPUT
+    @ProjectId INT, @DueDate DATE, @TaskId INT OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
-    INSERT INTO Tasks (Title, Description, Status, Priority, CategoryId, DueDate)
-    VALUES (@Title, @Description, @Status, @Priority, @CategoryId, @DueDate);
+    INSERT INTO Tasks (Title, Description, Status, Priority, ProjectId, DueDate)
+    VALUES (@Title, @Description, @Status, @Priority, @ProjectId, @DueDate);
     SET @TaskId = SCOPE_IDENTITY();
 END;
 GO
 
 CREATE OR ALTER PROCEDURE sp_UpdateTask
     @Id INT, @Title NVARCHAR(255), @Description NVARCHAR(MAX) = NULL,
-    @Status VARCHAR(50), @Priority VARCHAR(50), @CategoryId VARCHAR(50), @DueDate DATE
+    @Status VARCHAR(50), @Priority VARCHAR(50), @ProjectId INT, @DueDate DATE
 AS
 BEGIN
     SET NOCOUNT ON;
     UPDATE Tasks SET Title=@Title, Description=@Description, Status=@Status,
-        Priority=@Priority, CategoryId=@CategoryId, DueDate=@DueDate WHERE Id=@Id;
+        Priority=@Priority, ProjectId=@ProjectId, DueDate=@DueDate WHERE Id=@Id;
 END;
 GO
 

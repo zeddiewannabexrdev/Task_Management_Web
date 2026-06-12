@@ -25,7 +25,8 @@
 
     var catStats = AppState.Categories.Select(c =>
     {
-        var ct = tasks.Where(t => t.CategoryId == c.Id).ToList();
+        var pIds = AppState.Projects.Where(p => p.CategoryId == c.Id).Select(p => p.Id).ToList();
+        var ct = tasks.Where(t => pIds.Contains(t.ProjectId)).ToList();
         int r = ct.Count > 0 ? (int)Math.Round((double)ct.Count(t => t.Status == "done") / ct.Count * 100) : 0;
         return new { Cat = c, Total = ct.Count, Done = ct.Count(t => t.Status == "done"), Rate = r };
     }).ToList();
