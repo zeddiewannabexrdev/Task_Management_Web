@@ -1,0 +1,76 @@
+@inject AppState AppState
+@inject IJSRuntime JS
+
+@{
+    var cat = AppState.Categories.FirstOrDefault(c => c.Id == Task.CategoryId);
+    var today = DateTime.Today.ToString("yyyy-MM-dd");
+    bool isOverdue = Task.Status != "done" && string.Compare(Task.DueDate, today) < 0;
+    int doneCount = Task.Subtasks.Count(s => s.Completed);
+}
+
+<div class="task-card @(Task.Status == "done" ? "done" : "")"
+     draggable="true"
+     @ondragstart="OnDragStart"
+     @onclick="() => AppState.OpenEditTaskDrawer(Task)">
+
+    @* Priority bar *@
+    <div class="card-priority-bar priority-bar-@Task.Priority"></div>
+
+    <div class="card-body">
+        @* Header *@
+        <div class="card-header">
+            <span class="badge priority-@Task.Priority">@TaskLabels.Priority[Task.Priority]</span>
+            @if (isOverdue)
+            {
+                <span class="overdue-chip">⚠ Quá hạn</span>
+            }
+        </div>
+
+        @* Title *@
+        <h4 class="card-title @(Task.Status == "done" ? "done" : "")">@Task.Title</h4>
+
+        @* Description *@
+        @if (!string.IsNullOrEmpty(Task.Description))
+        {
+            <p class="card-desc">@Task.Description</p>
+        }
+
+        @* Subtask progress *@
+        @if (Task.Subtasks.Count > 0)
+        {
+            var pct = (int)Math.Round((double)doneCount / Task.Subtasks.Count * 100);
+            <div class="card-subtasks">
+                <div class="subtask-progress-bar">
+                    <div class="subtask-progress-fill" style="width:@pct%"></div>
+                </div>
+                <span class="subtask-count">@doneCount/@Task.Subtasks.Count</span>
+            </div>
+        }
+
+        @* Footer *@
+        <div class="card-footer">
+            @if (cat != null)
+            {
+                <div class="card-cat">
+                    <span class="cat-dot cat-@cat.Color"></span>
+                    <span>@cat.Name</span>
+                </div>
+            }
+            <div class="card-due @(isOverdue ? "overdue" : "")">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>@(Task.DueDate == today ? "Hôm nay" : Task.DueDate)</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public TaskItem Task { get; set; } = null!;
+
+    async Task OnDragStart()
+        => await JS.InvokeVoidAsync("taskFlow.setDragId", Task.Id.ToString());
+}

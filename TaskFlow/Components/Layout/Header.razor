@@ -1,0 +1,126 @@
+@inject AppState AppState
+
+<header class="app-header glass">
+    @* ── Greeting & Date ─────────────────────── *@
+    <div class="header-left">
+        <span class="header-greeting">@Greeting</span>
+        <span class="header-date">@VietnameseDate</span>
+    </div>
+
+    @* ── Search Bar ──────────────────────────── *@
+    <div class="header-search">
+        <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input id="input-search" type="text" class="search-input" placeholder="Tìm kiếm công việc..."
+               value="@AppState.SearchQuery"
+               @oninput="e => AppState.SetSearch(e.Value?.ToString() ?? string.Empty)" />
+        @if (!string.IsNullOrEmpty(AppState.SearchQuery))
+        {
+            <button class="search-clear" @onclick="ClearSearch">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        }
+    </div>
+
+    @* ── Actions ─────────────────────────────── *@
+    <div class="header-actions">
+        @* Notification Bell *@
+        <div class="notif-wrap" @onfocusout="() => _showNotif = false">
+            <button id="btn-notifications" class="icon-btn @(_showNotif ? "active" : "")"
+                    @onclick="() => _showNotif = !_showNotif" title="Thông báo">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                @if (OverdueTasks.Any())
+                {
+                    <span class="notif-dot"></span>
+                }
+            </button>
+
+            @if (_showNotif)
+            {
+                <div class="notif-dropdown" @onclick:stopPropagation>
+                    <div class="notif-header">
+                        <span>Thông báo</span>
+                        @if (OverdueTasks.Any())
+                        {
+                            <span class="notif-count">@OverdueTasks.Count quá hạn</span>
+                        }
+                    </div>
+                    <div class="notif-body">
+                        @if (OverdueTasks.Any())
+                        {
+                            @foreach (var t in OverdueTasks.Take(5))
+                            {
+                                <div class="notif-item" @onclick="() => OpenTask(t)">
+                                    <div class="notif-item-icon">⚠️</div>
+                                    <div class="notif-item-text">
+                                        <span class="notif-title">@t.Title</span>
+                                        <span class="notif-sub">Quá hạn (@t.DueDate)</span>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="notif-empty">
+                                <span>✅</span>
+                                <span>Không có thông báo mới</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        @* Create Task Button *@
+        <button id="btn-create-task" class="btn-primary" @onclick='() => AppState.OpenNewTaskDrawer("todo")'>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Tạo công việc</span>
+        </button>
+    </div>
+</header>
+
+@code {
+    bool _showNotif;
+
+    string Greeting
+    {
+        get
+        {
+            var h = DateTime.Now.Hour;
+            return h < 12 ? "Chào buổi sáng, Admin! ☀️"
+                 : h < 18 ? "Chào buổi chiều, Admin! 🌤️"
+                          : "Chào buổi tối, Admin! 🌙";
+        }
+    }
+
+    string VietnameseDate
+    {
+        get
+        {
+            string[] days = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
+            var now = DateTime.Now;
+            return $"{days[(int)now.DayOfWeek]}, ngày {now:dd/MM/yyyy}";
+        }
+    }
+
+    List<TaskItem> OverdueTasks =>
+        AppState.Tasks
+            .Where(t => string.Compare(t.DueDate, DateTime.Today.ToString("yyyy-MM-dd"), StringComparison.Ordinal) < 0 && t.Status != "done")
+            .ToList();
+
+    void OpenTask(TaskItem t)
+    {
+        _showNotif = false;
+        AppState.OpenEditTaskDrawer(t);
+    }
+
+    void ClearSearch() => AppState.SetSearch(string.Empty);
+}

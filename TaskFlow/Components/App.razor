@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <title>TaskFlow — Quản lý công việc</title>
+    <meta name="description" content="Ứng dụng quản lý công việc cá nhân với bảng Kanban, dashboard thống kê và nhiều tính năng hữu ích." />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- App Styles -->
+    <link rel="stylesheet" href="app.css" />
+
+    <!-- Áp dụng theme ngay lập tức để tránh FOUC (Flash of Unstyled Content) -->
+    <script>
+        (function () {
+            var t = localStorage.getItem('taskflow_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+
+    <HeadOutlet @rendermode="InteractiveServer" />
+</head>
+<body>
+    <Routes @rendermode="InteractiveServer" />
+    <script src="dragdrop.js"></script>
+    <script src="_framework/blazor.server.js"></script>
+</body>
+</html>

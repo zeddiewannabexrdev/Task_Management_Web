@@ -1,0 +1,15 @@
+<Router AppAssembly="typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>Không tìm thấy — TaskFlow</PageTitle>
+        <LayoutView Layout="typeof(MainLayout)">
+            <div style="text-align:center; padding: 60px; color: var(--text-muted)">
+                <h1>404</h1>
+                <p>Trang không tồn tại.</p>
+            </div>
+        </LayoutView>
+    </NotFound>
+</Router>

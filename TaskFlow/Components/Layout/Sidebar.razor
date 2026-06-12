@@ -1,0 +1,171 @@
+@inject AppState AppState
+@inject IJSRuntime JS
+
+<aside class="sidebar">
+
+    @* ── Brand Logo ─────────────────────────────── *@
+    <div class="sidebar-brand">
+        <div class="brand-logo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 11 12 14 22 4"></polyline>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+        </div>
+        <span class="brand-name">TaskFlow</span>
+    </div>
+
+    @* ── Primary Navigation ──────────────────────── *@
+    <nav class="sidebar-nav">
+        <p class="nav-section-label">Menu</p>
+
+        <button id="nav-dashboard" class="nav-item @(AppState.CurrentView == "dashboard" ? "active" : "")"
+                @onclick='() => AppState.SetView("dashboard")'>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect>
+            </svg>
+            <span>Tổng quan</span>
+        </button>
+
+        <button id="nav-board" class="nav-item @(AppState.CurrentView == "board" ? "active" : "")"
+                @onclick='() => AppState.SetView("board")'>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line>
+                <line x1="9" y1="9" x2="9" y2="21"></line><line x1="15" y1="9" x2="15" y2="21"></line>
+            </svg>
+            <span>Bảng công việc</span>
+        </button>
+    </nav>
+
+    @* ── Categories Section ──────────────────────── *@
+    <div class="sidebar-section">
+        <div class="section-header">
+            <p class="nav-section-label" style="margin:0">Dự án / Danh mục</p>
+            <button id="btn-add-category" class="icon-btn" @onclick="ToggleAddCat" title="Thêm danh mục mới">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+        </div>
+
+        @if (_showAddCat)
+        {
+            <div class="cat-add-form">
+                <input id="input-new-category" class="cat-add-input" placeholder="Tên danh mục..."
+                       @bind="_newCatName" @bind:event="oninput"
+                       @onkeydown="HandleCatKey" autofocus />
+                <button class="icon-btn accent" @onclick="SubmitAddCat" title="Xác nhận">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </button>
+                <button class="icon-btn" @onclick="CancelAddCat" title="Hủy">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        }
+
+        <div class="cat-list">
+            <button class="cat-item @(AppState.CategoryFilter == "all" ? "active" : "")"
+                    @onclick='() => SelectCategory("all")'>
+                <div class="cat-item-left">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>Tất cả</span>
+                </div>
+                <span class="cat-count">@AppState.GetActiveTaskCount("all")</span>
+            </button>
+
+            @foreach (var cat in AppState.Categories)
+            {
+                <button class="cat-item @(AppState.CategoryFilter == cat.Id ? "active" : "")"
+                        @onclick="() => SelectCategory(cat.Id)">
+                    <div class="cat-item-left">
+                        <span class="cat-dot cat-@cat.Color"></span>
+                        <span>@cat.Name</span>
+                    </div>
+                    <span class="cat-count">@AppState.GetActiveTaskCount(cat.Id)</span>
+                </button>
+            }
+        </div>
+    </div>
+
+    @* ── Sidebar Footer ──────────────────────────── *@
+    <div class="sidebar-footer">
+        <div class="theme-row">
+            <div class="theme-label">
+                @if (AppState.Theme == "dark")
+                {
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <span>Chế độ Tối</span>
+                }
+                else
+                {
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>
+                    </svg>
+                    <span>Chế độ Sáng</span>
+                }
+            </div>
+            <button id="btn-theme-toggle" class="toggle-switch @(AppState.Theme == "dark" ? "on" : "")"
+                    @onclick="ToggleTheme" aria-label="Chuyển đổi giao diện">
+                <span class="toggle-knob"></span>
+            </button>
+        </div>
+
+        <div class="user-card">
+            <div class="user-avatar">AD</div>
+            <div class="user-info">
+                <span class="user-name">Admin</span>
+                <span class="user-role">Quản lý</span>
+            </div>
+        </div>
+    </div>
+</aside>
+
+@code {
+    bool _showAddCat;
+    string _newCatName = "";
+
+    void ToggleAddCat() => _showAddCat = !_showAddCat;
+    void CancelAddCat() { _showAddCat = false; _newCatName = ""; }
+
+    void SelectCategory(string id)
+    {
+        AppState.SetCategoryFilter(id);
+        AppState.SetView("board"); // Tự động chuyển sang xem Bảng công việc
+    }
+
+    async Task ToggleTheme()
+    {
+        var next = AppState.Theme == "dark" ? "light" : "dark";
+        AppState.SetTheme(next);
+        await JS.InvokeVoidAsync("taskFlow.setTheme", next);
+    }
+
+    async Task SubmitAddCat()
+    {
+        if (!string.IsNullOrWhiteSpace(_newCatName))
+        {
+            await AppState.AddCategoryAsync(_newCatName);
+            _newCatName = "";
+            _showAddCat = false;
+        }
+    }
+
+    async Task HandleCatKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await SubmitAddCat();
+        else if (e.Key == "Escape") CancelAddCat();
+    }
+}

@@ -1,0 +1,52 @@
+@inherits LayoutComponentBase
+@inject AppState AppState
+@implements IDisposable
+
+<div class="app-shell">
+    <Sidebar />
+    <div class="main-content">
+        <Header />
+        <main class="content-body">
+            @if (AppState.IsLoading)
+            {
+                <div class="loading-screen">
+                    <div class="loading-ring"></div>
+                    <span class="loading-text">Đang kết nối cơ sở dữ liệu...</span>
+                </div>
+            }
+            else if (AppState.ErrorMessage != null)
+            {
+                <div class="error-screen">
+                    <div class="error-icon">⚠️</div>
+                    <h2>Không thể kết nối</h2>
+                    <p>@AppState.ErrorMessage</p>
+                </div>
+            }
+            else
+            {
+                @* Render Dashboard hoặc Board dựa vào CurrentView *@
+                @if (AppState.CurrentView == "dashboard")
+                {
+                    <Home />
+                }
+                else
+                {
+                    <Board />
+                }
+            }
+        </main>
+    </div>
+    <TaskDrawer />
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.OnChange += OnStateChanged;
+        await AppState.InitializeAsync();
+    }
+
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => AppState.OnChange -= OnStateChanged;
+}
