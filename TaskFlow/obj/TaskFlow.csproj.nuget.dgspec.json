@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Projects\\Task_Management_Web\\TaskFlow\\TaskFlow.csproj": {}
+    "d:\\Projects\\Task_Management_Web\\TaskFlow\\TaskFlow.csproj": {}
   },
   "projects": {
-    "D:\\Projects\\Task_Management_Web\\TaskFlow\\TaskFlow.csproj": {
+    "d:\\Projects\\Task_Management_Web\\TaskFlow\\TaskFlow.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Projects\\Task_Management_Web\\TaskFlow\\TaskFlow.csproj",
+        "projectUniqueName": "d:\\Projects\\Task_Management_Web\\TaskFlow\\TaskFlow.csproj",
         "projectName": "TaskFlow",
-        "projectPath": "D:\\Projects\\Task_Management_Web\\TaskFlow\\TaskFlow.csproj",
+        "projectPath": "d:\\Projects\\Task_Management_Web\\TaskFlow\\TaskFlow.csproj",
         "packagesPath": "C:\\Users\\ADMIN\\.nuget\\packages\\",
-        "outputPath": "D:\\Projects\\Task_Management_Web\\TaskFlow\\obj\\",
+        "outputPath": "d:\\Projects\\Task_Management_Web\\TaskFlow\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

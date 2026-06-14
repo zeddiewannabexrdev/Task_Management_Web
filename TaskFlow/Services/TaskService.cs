@@ -79,7 +79,7 @@ public class TaskService(string connectionString)
             Id = (int)p.Value, 
             Name = name, 
             CategoryId = categoryId, 
-            CreatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") 
+            CreatedAt = TimeUtils.VNNow.ToString("yyyy-MM-dd HH:mm:ss") 
         };
     }
 

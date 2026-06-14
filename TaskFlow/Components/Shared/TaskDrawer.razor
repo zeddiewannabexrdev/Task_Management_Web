@@ -1,4 +1,5 @@
 @inject AppState AppState
+@inject IJSRuntime JS
 @implements IDisposable
 
 @if (AppState.IsDrawerOpen)
@@ -51,7 +52,7 @@
                 @* Description *@
                 <div class="form-group">
                     <label class="form-label">Mô tả chi tiết</label>
-                    <textarea id="input-task-desc" class="form-textarea"
+                    <textarea id="input-task-desc" class="form-textarea auto-resize"
                               placeholder="Mô tả các bước thực hiện, ghi chú..."
                               @bind="_description" @bind:event="oninput"></textarea>
                 </div>
@@ -168,7 +169,7 @@
     string _status = "todo";
     string _priority = "medium";
     int _projectId;
-    DateTime _dueDate = DateTime.Today;
+    DateTime _dueDate = TimeUtils.VNToday;
     List<Subtask> _subtasks = [];
     string _newSubText = "";
     bool _titleError;
@@ -193,9 +194,22 @@
         {
             // Drawer just opened
             PopulateForm();
+            _justOpened = true;
         }
         _wasOpen = AppState.IsDrawerOpen;
         InvokeAsync(StateHasChanged);
+    }
+
+    bool _justOpened;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_justOpened)
+        {
+            _justOpened = false;
+            await Task.Delay(50);
+            try { await JS.InvokeVoidAsync("taskFlow.autoResizeTextarea", "input-task-desc"); } catch {}
+        }
     }
 
     private void PopulateForm()
@@ -208,7 +222,7 @@
             _status = AppState.DefaultStatus;
             _priority = "medium";
             _projectId = AppState.SelectedProjectId ?? AppState.Projects.FirstOrDefault()?.Id ?? 0;
-            _dueDate = DateTime.Today;
+            _dueDate = TimeUtils.VNToday;
             _subtasks = [];
         }
         else if (AppState.EditingTask != null)
@@ -220,7 +234,7 @@
             _status = t.Status;
             _priority = t.Priority;
             _projectId = t.ProjectId;
-            _dueDate = DateTime.TryParse(t.DueDate, out var d) ? d : DateTime.Today;
+            _dueDate = DateTime.TryParse(t.DueDate, out var d) ? d : TimeUtils.VNToday;
             _subtasks = [.. t.Subtasks];
         }
 

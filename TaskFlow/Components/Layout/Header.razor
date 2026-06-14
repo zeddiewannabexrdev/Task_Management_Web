@@ -4,8 +4,13 @@
 <header class="app-header glass">
     @* ── Greeting & Date ─────────────────────── *@
     <div class="header-left">
-        <span class="header-greeting">@Greeting</span>
-        <span class="header-date">@VietnameseDate</span>
+        <button class="mobile-menu-btn" @onclick="AppState.ToggleSidebar">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div class="header-greeting-wrap">
+            <span class="header-greeting">@Greeting</span>
+            <span class="header-date">@VietnameseDate</span>
+        </div>
     </div>
 
     @* ── Search Bar ──────────────────────────── *@
@@ -98,7 +103,7 @@
     {
         get
         {
-            var h = DateTime.Now.Hour;
+            var h = TimeUtils.VNNow.Hour;
             return h < 12 ? "Chào buổi sáng, Admin! ☀️"
                  : h < 18 ? "Chào buổi chiều, Admin! 🌤️"
                           : "Chào buổi tối, Admin! 🌙";
@@ -110,14 +115,14 @@
         get
         {
             string[] days = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
-            var now = DateTime.Now;
+            var now = TimeUtils.VNNow;
             return $"{days[(int)now.DayOfWeek]}, ngày {now:dd/MM/yyyy}";
         }
     }
 
     List<TaskItem> OverdueTasks =>
         AppState.Tasks
-            .Where(t => string.Compare(t.DueDate, DateTime.Today.ToString("yyyy-MM-dd"), StringComparison.Ordinal) < 0 && t.Status != "done")
+            .Where(t => string.Compare(t.DueDate, TimeUtils.VNToday.ToString("yyyy-MM-dd"), StringComparison.Ordinal) < 0 && t.Status != "done")
             .ToList();
 
     void OpenTask(TaskItem t)

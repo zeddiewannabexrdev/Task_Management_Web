@@ -140,7 +140,7 @@
     @* ── List View ───────────────────────────────────────────────────────── *@
     else
     {
-        var today = DateTime.Today.ToString("yyyy-MM-dd");
+        var today = TimeUtils.VNToday.ToString("yyyy-MM-dd");
         <div class="list-wrap">
             <table class="task-table">
                 <thead>
@@ -162,7 +162,7 @@
                             var c = p != null ? AppState.Categories.FirstOrDefault(cat => cat.Id == p.CategoryId) : null;
                             var isDone = t.Status == "done";
                             var isOverdue = !isDone && string.Compare(t.DueDate, today) < 0;
-                            var tomorrowStr = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd");
+                            var tomorrowStr = TimeUtils.VNToday.AddDays(1).ToString("yyyy-MM-dd");
                             var dateLabel = t.DueDate == today ? "Hôm nay"
                                           : t.DueDate == tomorrowStr ? "Ngày mai"
                                           : isOverdue ? $"Quá hạn ({t.DueDate})"

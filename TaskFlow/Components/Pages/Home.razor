@@ -4,7 +4,7 @@
 
 @{
     var tasks = AppState.Tasks;
-    var today = DateTime.Today.ToString("yyyy-MM-dd");
+    var today = TimeUtils.VNToday.ToString("yyyy-MM-dd");
 
     int total = tasks.Count;
     int inProgress = tasks.Count(t => t.Status == "inprogress");

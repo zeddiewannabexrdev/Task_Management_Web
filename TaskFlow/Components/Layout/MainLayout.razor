@@ -2,7 +2,8 @@
 @inject AppState AppState
 @implements IDisposable
 
-<div class="app-shell">
+<div class="app-shell @(AppState.IsSidebarOpen ? "sidebar-open" : "")">
+    <div class="sidebar-overlay" @onclick="AppState.ToggleSidebar"></div>
     <Sidebar />
     <div class="main-content">
         <Header />

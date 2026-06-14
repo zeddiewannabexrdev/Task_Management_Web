@@ -67,3 +67,9 @@ D:\Projects\Task_Management_Web\TaskFlow\obj\Release\net8.0\refint\TaskFlow.dll
 D:\Projects\Task_Management_Web\TaskFlow\obj\Release\net8.0\TaskFlow.pdb
 D:\Projects\Task_Management_Web\TaskFlow\obj\Release\net8.0\TaskFlow.genruntimeconfig.cache
 D:\Projects\Task_Management_Web\TaskFlow\obj\Release\net8.0\ref\TaskFlow.dll
+d:\Projects\Task_Management_Web\TaskFlow\bin\Release\net8.0\publish\web.config
+d:\Projects\Task_Management_Web\TaskFlow\bin\Release\net8.0\publish\appsettings.json
+d:\Projects\Task_Management_Web\TaskFlow\bin\Release\net8.0\publish\appsettings.Production.json
+d:\Projects\Task_Management_Web\TaskFlow\bin\Release\net8.0\publish\TaskFlow.deps.json
+d:\Projects\Task_Management_Web\TaskFlow\bin\Release\net8.0\publish\TaskFlow.runtimeconfig.json
+d:\Projects\Task_Management_Web\TaskFlow\bin\Release\net8.0\publish\TaskFlow.staticwebassets.endpoints.json

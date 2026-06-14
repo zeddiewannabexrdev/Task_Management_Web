@@ -18,6 +18,7 @@ public class AppState(TaskService db)
     // ─── UI STATE ─────────────────────────────────────────────────────────────
     public string Theme { get; private set; } = "dark";
     public string CurrentView { get; private set; } = "dashboard";
+    public bool IsSidebarOpen { get; private set; } = false;
 
     // ─── FILTERS ──────────────────────────────────────────────────────────────
     public string SearchQuery { get; private set; } = "";
@@ -63,7 +64,7 @@ public class AppState(TaskService db)
     // ─── FILTERED VIEW ────────────────────────────────────────────────────────
     public IReadOnlyList<TaskItem> GetFilteredTasks()
     {
-        var today = DateTime.Today.ToString("yyyy-MM-dd");
+        var today = TimeUtils.VNToday.ToString("yyyy-MM-dd");
         return Tasks.Where(t =>
         {
             if (!string.IsNullOrEmpty(SearchQuery) &&
@@ -87,7 +88,7 @@ public class AppState(TaskService db)
             {
                 "today" => t.DueDate == today,
                 "week" => DateTime.TryParse(t.DueDate, out var d) &&
-                          d >= DateTime.Today && d <= DateTime.Today.AddDays(7),
+                          d >= TimeUtils.VNToday && d <= TimeUtils.VNToday.AddDays(7),
                 "overdue" => string.Compare(t.DueDate, today, StringComparison.Ordinal) < 0 &&
                              t.Status != "done",
                 _ => true
@@ -111,9 +112,10 @@ public class AppState(TaskService db)
     public void SetSearch(string q) { SearchQuery = q; Notify(); }
     public void SetPriorityFilter(string f) { PriorityFilter = f; Notify(); }
     public void SetDateFilter(string f) { DateFilter = f; Notify(); }
-    public void SetCategoryFilter(string f) { CategoryFilter = f; SelectedProjectId = null; Notify(); }
-    public void SelectProject(int projectId) { SelectedProjectId = projectId; Notify(); }
+    public void SetCategoryFilter(string f) { CategoryFilter = f; SelectedProjectId = null; IsSidebarOpen = false; Notify(); }
+    public void SelectProject(int projectId) { SelectedProjectId = projectId; IsSidebarOpen = false; Notify(); }
     public void ClearFilters() { PriorityFilter = "all"; DateFilter = "all"; Notify(); }
+    public void ToggleSidebar() { IsSidebarOpen = !IsSidebarOpen; Notify(); }
 
     // ─── DRAWER ───────────────────────────────────────────────────────────────
     public void OpenNewTaskDrawer(string status = "todo")

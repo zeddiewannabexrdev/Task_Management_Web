@@ -42,7 +42,7 @@ public class TaskInput
     public string Status { get; set; } = "todo";
     public string Priority { get; set; } = "medium";
     public int ProjectId { get; set; }
-    public string DueDate { get; set; } = DateTime.Today.ToString("yyyy-MM-dd");
+    public string DueDate { get; set; } = TaskFlow.Services.TimeUtils.VNToday.ToString("yyyy-MM-dd");
     public List<Subtask> Subtasks { get; set; } = [];
 
     public static TaskInput FromTask(TaskItem t) => new()

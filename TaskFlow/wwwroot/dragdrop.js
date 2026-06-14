@@ -11,4 +11,20 @@ window.taskFlow = {
         localStorage.setItem('taskflow_theme', theme);
     },
     getTheme: () => localStorage.getItem('taskflow_theme') || 'dark',
+
+    // ── Auto Resize Textarea ─────────────────────────────────────────────────
+    autoResizeTextarea: (id) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+        }
+    }
 };
+
+document.addEventListener('input', function (e) {
+    if (e.target.tagName.toLowerCase() === 'textarea' && e.target.classList.contains('auto-resize')) {
+        e.target.style.height = 'auto';
+        e.target.style.height = e.target.scrollHeight + 'px';
+    }
+});
